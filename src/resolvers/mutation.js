@@ -2,22 +2,45 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { AuthenticationError, ForbiddenError } = require('apollo-server-express');
 require('dotenv').config();
+const mongoose = require('mongoose');
 
 module.exports = {
-    newNote: async (_, args, { models }) => {
+    newNote: async (_, args, { models, user }) => {
+        if (!user) {
+            throw new AuthenticationError('You must be signed in to create a note');
+        }
         return await models.Note.create({
             content: args.content,
-            author: 'Adam Scott'
+            author: mongoose.Types.ObjectId(user.id)
         });
     
     },
 
     updateNote: async (_, { id, content }, { models }) => {
-        return await models.Note.findByIdAndUpdate(id, { $set: { content }}, {new: true });
+        if (!user){
+            throw new AuthenticationError('You must be signed in to update a note')
+        }
+        if (String(note.author) !== user.id) {
+            throw new ForbiddenError("You don't have permission to update a note")
+        }
+        try{
+            return await models.Note.findByIdAndUpdate(id, { $set: { content }}, {new: true });
+
+        }catch(err){
+            return err;
+
+        }
+        
 
     },
 
-    deleteNote: async (_, { id }, { models }) => {
+    deleteNote: async (_, { id }, { models, user }) => {
+        if (!user){
+            throw new AuthenticationError('You must be signed in to delete a note')
+        }
+        if (String(note.author) !== user.id) {
+            throw new ForbiddenError("You don't have permission to delete this note")
+        }
         try{
             await models.Note.findByIdAndRemove(id);
             return true;
@@ -25,6 +48,28 @@ module.exports = {
         }catch(err){
             return false;
 
+        }
+    },
+
+    toggleFavorite: async (_, { id }, { models, user }) => {
+        if (!user){
+            throw new AuthenticationError();
+        }
+        let noteCheck = await models.Note.findById(id);
+        const hasUser = noteCheck.favoritedBy.indexOf(user.id);
+
+        if (hasUser >= 0){ 
+            return await models.Note.findByIdAndUpdate(
+                id, 
+                {$pull: {favoritedBy: mongoose.Schema.Types.ObjectID(user.id)}, $inc: {favoriteCount: -1}},
+                {new: true}
+                );
+        } else {
+            return await models.Note.findByIdAndUpdate(
+                id, 
+                {$push: {favoritedBy: mongoose.Schema.Types.ObjectID(user.id)}, $inc: {favoriteCount: 1}},
+                {new: true}
+                );
         }
     },
 

@@ -16,12 +16,13 @@ module.exports = {
     
     },
 
-    updateNote: async (_, { id, content }, { models }) => {
+    updateNote: async (_, { id, content }, { models, user }) => {
         if (!user){
             throw new AuthenticationError('You must be signed in to update a note')
         }
-        if (String(note.author) !== user.id) {
-            throw new ForbiddenError("You don't have permission to update a note")
+        let note = models.Note.findById(id);
+        if (note && String(note.author) !== user.id) {
+            throw new ForbiddenError("You don't have permission to update this note")
         }
         try{
             return await models.Note.findByIdAndUpdate(id, { $set: { content }}, {new: true });
@@ -38,11 +39,12 @@ module.exports = {
         if (!user){
             throw new AuthenticationError('You must be signed in to delete a note')
         }
-        if (String(note.author) !== user.id) {
+        let note = models.Note.findById(id);
+        if (note && String(note.author) !== user.id) {
             throw new ForbiddenError("You don't have permission to delete this note")
         }
         try{
-            await models.Note.findByIdAndRemove(id);
+            await note.remove();
             return true;
 
         }catch(err){

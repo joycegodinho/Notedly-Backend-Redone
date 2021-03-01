@@ -10,7 +10,7 @@ const { createComplexityLimitRule } = require('graphql-validation-complexity');
 const models = require('../models');
 require('../config/db');
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 const typeDefs = require('./schema');
 
@@ -20,7 +20,7 @@ const resolvers = require('./resolvers');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: (process.env.NODE_ENV === 'production') ? undefined : false }));
 app.use(cors());
 
 const getUser = token => {
@@ -45,7 +45,7 @@ const server = new ApolloServer({
     }
  });
 
-server.applyMiddleware({ app, path: '/api'});
+server.applyMiddleware({ app, path: '/graphql'});
 
 //app.get(path, callback function)
 //app.get('/', (req, res) => res.send('hello world'));

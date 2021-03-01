@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-var url = 'mongodb://localhost:27017/Notedly2';
+var url = process.env.DB_HOST;
 
 const options = {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true, 
+    useCreateIndex: true
 };
 
 const db = mongoose.connect(url, options)

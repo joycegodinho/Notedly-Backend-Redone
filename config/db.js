@@ -6,7 +6,8 @@ var url = process.env.DB_HOST;
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true, 
-    useCreateIndex: true
+    useCreateIndex: true,
+    useFindAndModify: false
 };
 
 const db = mongoose.connect(url, options)
